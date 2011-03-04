@@ -1,0 +1,78 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<!--Test Console for testing of the language without server interferance this is standalone and can be run in the directory-->
+<html>
+	<head>
+		<script src="lang\tokenizer.js"></script>
+		<script src="lang\parser.js"></script>
+		<script src="lang\interpreter.js"></script>
+		<script src="js\json2.js"></script>
+		<script src="editor\edit_area_full.js"></script>
+		<link href="stylesheets\stylesheet.css" rel="stylesheet" type="text/css"/>
+		<script language="Javascript" type="text/javascript">
+		// initialisation
+		editAreaLoader.init({
+			id: "INPUT"	// id of the textarea to transform		
+			,start_highlight: true	// if start with highlight
+			,allow_resize: "both"
+			,allow_toggle: true
+			,word_wrap: true
+			,language: "en"
+			,syntax: "js"	
+		});
+	</script>
+	</head>
+	<body>
+		<noscript> Uffff! You may not see it because you have JavaScript turned off. </noscript>
+		<div class="container">
+			<p class="Title"><b> Test Console </b><input id="PARSE" value="Parse it!" type="button" class="button"></p>
+			<textarea id="INPUT" class="input">
+function fib(n){
+	if(n <= 1){
+		return 1;
+	}else{
+		return fib(n-1) + fib(n-2);
+	}
+}
+println fib(5);
+			</textarea>
+			<pre id="CONSOLE" class="output" wrap="on" style="height: 2in;"></pre>
+			<pre id="ASTOUTPUT" class="output"></pre>
+		</div>
+		
+		<script>
+			//-----------enabling console like output-------------
+			var ioa = {
+			print: function (output){
+				var console = document.getElementById('CONSOLE');
+				console.innerHTML += output;
+				console.scrollTop = console.scrollHeight;
+			},
+			println: function (output){
+				var console = document.getElementById('CONSOLE');
+				console.innerHTML += output + '\n';
+				console.scrollTop = console.scrollHeight;
+			}};
+			var tabspace = 4;
+			var keys = ['key', 'name', 'message', 'arity', 'value', 
+							'eval','loopval', 'step', 'declareStat',
+							'first', 'second', 'third', 'fourth', 
+							'from', 'to', 'line', 'at'];
+			function inspect(obj){return JSON.stringify(obj, keys, tabspace);}
+			
+			document.getElementById('PARSE').onclick = function (e) {
+				var parseTreestring,parseTree,tokens,source;
+				try {
+					source = editAreaLoader.getValue("INPUT")
+					tokens = tokenize(source, '=<>!+-*&|/%^~', '=<>&|+-*');
+					parseTree = parse(tokens, ioa);
+					interpret(parseTree, ioa);
+				} catch (e) {
+					interpret(parseTree, ioa, e);
+				}
+				try{parseTreestring = JSON.stringify(parseTree, keys, tabspace);}
+				catch(e){parseTreestring = JSON.stringify(e, keys, tabspace);}
+				document.getElementById('ASTOUTPUT').innerHTML = parseTreestring.replace(/&/g, '&amp;').replace(/[<]/g, '&lt;');
+			}
+		</script>
+	</body>
+</html>
