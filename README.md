@@ -1,5 +1,5 @@
 This is part of a bigger project that I am working on but this a standalone version that I use for debugging.
-
+It was originally based of of http://javascript.crockford.com/tdop/index.html but it has been heavily modified
 the language currently implemented is kind of like javascript such that you declare 
 
 var foo = "bar";
