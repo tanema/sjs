@@ -2,22 +2,22 @@
 	interpreter.js
 	By Tim Anema 2010
 */
-this.interpreter = function (ioAdapter) {
+this.interpreter = function (preDefinedFunctions) {
 	//========================scoping definitions========================
 	var scope;
     var symbol_table = {};
 	var scope_arity = ['global','function','loop','if'];
 	
 	var error = function (message, t,errorNum) {
-		var errString = "===========Interpeter Interupted=============\n"
-        errString += "\n";
+		var errString = "===========Interpeter Interupted=============\n";
         errString += "Interpret Error\n";
-        errString += message+"\n";
+        errString += message+" "+t.id+"\n";
         errString += "ERROR CODE: " + errorNum+"\n";
         if(t['value']){
             errString += "On " +  t['value'] + " " + t['arity']+"\n";
             errString += "At Line: " + t['line'] + ", char : " + t['at']+"\n";
         }
+        errString += "=========================================";
         throw errString;
 	};
 	
@@ -86,16 +86,18 @@ this.interpreter = function (ioAdapter) {
 	function ReturnDef(returnVal){return (returnVal && (returnVal['value'] === 'return')) ? returnVal:undefined;}
 	function isBreakOrReturn(returnVal){return (returnVal && (returnVal['value'] === 'return' || returnVal['value'] === 'break'));}
 	
-	
 	//======================Stat definitions====================
 	
 	function functionStat(currentItem){
-		switch(currentItem['value']){
-			case 'print': 	return ioAdapter.print(stat('first', currentItem));
-			case 'println': return ioAdapter.println(stat('first', currentItem));
-			case 'function':return scope.define(make(currentItem, currentItem),currentItem['name']);
-			default:		error("undefined function",currentItem,3099);
+		if(currentItem.value == 'function') 
+			return scope.define(make(currentItem, currentItem),currentItem['name']);
+		else if(preDefinedFunctions[currentItem.value]){
+			var arr=[],i;
+			for(i=0;i<currentItem['first'].length;i++) arr.push(stat(i,currentItem['first']));
+			return preDefinedFunctions['println'].apply(this||window,arr);
 		}
+		else
+			error("undefined function",currentItem,3099);
 	}
 	
 	function unaryStat(currentItem){
@@ -111,8 +113,7 @@ this.interpreter = function (ioAdapter) {
 				return ~n;
 			case '[':
 				var arr=[],i;
-				for(i=0;i<currentItem['first'].length;i++)
-					arr.push(stat(i,currentItem['first']));
+				for(i=0;i<currentItem['first'].length;i++) arr.push(stat(i,currentItem['first']));
 				return arr;
 			case '{':
 				var arr=[],i;
@@ -416,7 +417,7 @@ this.interpreter = function (ioAdapter) {
 					case 'this': 
 					case 'ternary': return eval(currentItem['arity']+'Stat')(currentItem);
 					case 'literal': return currentItem['value'];
-					case 'name': 	return (n = scope.find(currentItem)) ? n['eval']:error("Undefined Item",currentItem,3410); 
+					case 'name': 	return (n = scope.find(currentItem)) ? n['eval'] : error("Undefined Item",currentItem,3410); 
 				}
 			}
 		}else
@@ -444,11 +445,15 @@ this.interpreter = function (ioAdapter) {
 		}
 	}
 	
-	return function (parseTree) {
-		ioAdapter.println("==============INIT Interpeter================\n");	
+	return function (parseTree) {	
 		new_scope(scope_arity[0]);
-		stat('', {'': parseTree});
+			scope.define({
+	            value: 	'test',
+				name:	'test',
+				arity:	'name',
+				eval:	2
+	        });
+			stat('', {'': parseTree});
 		scope.pop();
-		ioAdapter.println("\n==============END Interpeter=================");
 	};
 }

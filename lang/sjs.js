@@ -5,25 +5,42 @@ var SJS = function(params){
 			'eval','loopval', 'step', 'declareStat',
 			'first', 'second', 'third', 'fourth', 
 			'from', 'to', 'line', 'at'];
-	sjs.ioa = params.ioa || {
-		print: function (output){
-			var console = document.getElementById('CONSOLE');
-			console.innerHTML += output;
-			console.scrollTop = console.scrollHeight;
+	
+	var predefined = {
+		functions: {
+			print: function (output){
+				var console = document.getElementById('CONSOLE');
+				console.innerHTML += output;
+				console.scrollTop = console.scrollHeight;
+			},
+			println: function (output){
+				var console = document.getElementById('CONSOLE');
+				console.innerHTML += output + '\n';
+				console.scrollTop = console.scrollHeight;
+			},
+			inspect: function(obj){return JSON.stringify(obj, keys, tabspace);}
 		},
-		println: function (output){
-			var console = document.getElementById('CONSOLE');
-			console.innerHTML += output + '\n';
-			console.scrollTop = console.scrollHeight;
-		},
-		inspect: function(obj){return JSON.stringify(obj, keys, tabspace);}
+		constants: {
+			SJSAuthor: "TimAnema"
+		}
 	}
+	//import user variables it is ok to overwrite if they want to
+	if(params.preDefined){
+        if(params.preDefined.functions)
+            for(var x in params.preDefined.functions)
+                predefined.functions[x] = params.preDefined.functions[x];
+        if(params.preDefined.constants)
+            for(var x in params.preDefined.constants)
+                predefined.constant[x] = params.preDefined.constants[x];
+    }
 	
 	sjs.tokenizer =  tokenizer('=<>!+-*&|/%^~', '=<>&|+-*');
-	sjs.parser = parser();
-	sjs.interpreter = interpreter(sjs.ioa);
+	sjs.parser = parser(predefined);
+	sjs.interpreter = interpreter(predefined.functions);
 
 	sjs.go = function(source){
+		if(params.debug)
+			document.getElementById('ASTOUTPUT').innerHTML = ""
 		try{
 			var tokens = sjs.tokenizer(source);
 			var parseTree = sjs.parser(tokens);
@@ -34,7 +51,7 @@ var SJS = function(params){
 				document.getElementById('ASTOUTPUT').innerHTML = parseTreestring.replace(/&/g, '&amp;').replace(/[<]/g, '&lt;');
 			}
 		}catch(e){
-			sjs.ioa.println(e);
+			predefined.functions.println(e);
 		}
 		
 	}

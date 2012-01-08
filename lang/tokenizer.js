@@ -42,15 +42,15 @@ var tokenizer = function (prefix, suffix) {
     var result;            // An array to hold the results.
 
 	var error = function (message, t, errorNum) {
-        var errString = "===========Tokenizer Interupted=============\n"
-        errString += "\n";
+        var errString = "===========Tokenizer Interupted=============\n";
         errString += "Syntax Error\n";
-        errString += message+"\n";
+        errString += message+" "+t.id+"\n";
         errString += "ERROR CODE: " + errorNum+"\n";
         if(t['value']){
             errString += "On " +  t['value'] + " " + t['arity']+"\n";
             errString += "At Line: " + t['line'] + ", char : " + t['at']+"\n";
         }
+        errString += "=========================================";
         throw errString;
 	};
 

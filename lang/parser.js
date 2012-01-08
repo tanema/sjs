@@ -6,7 +6,7 @@
  Also by Tim Anema 2010
 */
 
-var parser = function () {
+var parser = function (preDefined) {
     var scope;
     var symbol_table = {};
 	var reservedWords = {}; 
@@ -16,15 +16,15 @@ var parser = function () {
 	var scope_string = "";
 	
 	var error = function (message,t,errorNum) {
-        var errString = "===========Parser Interupted=============\n"
-        errString += "\n";
+        var errString = "===========Parser Interupted=============\n";
         errString += "Syntax Error\n";
-        errString += message+"\n";
+        errString += message+" "+t.id+"\n";
         errString += "ERROR CODE: " + errorNum+"\n";
         if(t['value']){
             errString += "On " +  t['value'] + " " + t['arity']+"\n";
             errString += "At Line: " + t['line'] + ", char : " + t['at']+"\n";
         }
+        errString += "=========================================";
         throw errString;
 	};
 	
@@ -109,7 +109,7 @@ var parser = function () {
     var advance = function (id) {
         var a, o, t, v;
         if (id && token.id !== id) {
-            error("Expected '" + id + "' and found",token, 2108);
+            error("Expected '" + id + "' and found ",token, 2108);
         }
         if (token_nr >= tokens.length) {
             token = symbol_table["(end)"];
@@ -356,6 +356,40 @@ var parser = function () {
 			error("Expected 'case' or 'default' statement but recieved '" + n.id + "'",token, 2338);
 		}
     };
+
+    function predefinedFunction(name){
+        stmt(name, function () {
+            var a = [];
+            this.first = a;
+            advance();
+            if (token.id !== ")") {
+                while (true)  {
+                    a.push(expression(0));
+                    if (token.id !== ",") {
+                        break;
+                    }
+                    advance(",");
+                }
+            }
+            advance(")");
+            this.arity = "function";
+            advance(";");
+            return this;
+        });
+    }
+
+    //This can ad some extra and fast change up to the existing language
+    //also these are very good for external calls
+    if(preDefined){
+        if(preDefined.functions)
+            for(var x in preDefined.functions)
+                predefinedFunction(x);
+        if(preDefined.constants)
+            for(var x in preDefined.constants)
+                constant(x, preDefined.constants[x]);
+    }
+
+    
 	
 	/**
 	|===============================================================================================|
@@ -801,23 +835,7 @@ var parser = function () {
         scope.pop();
         return this;
     });
-	
-	stmt("print", function () {
-        var a = [], n, t;
-		this.first = expression(0);
-		this.arity = "function";
-		advance(";");
-        return this;
-    });
-	
-	stmt("println", function () {
-        var a = [], n, t;
-		this.first = expression(0);
-		this.arity = "function";
-		advance(";");
-        return this;
-    });
-	
+		
 	//---------------------- END OF DEFINITIONS ---------------------- 
     return function (TokenStream) {
         scope_string = "";
