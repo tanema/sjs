@@ -6,22 +6,26 @@
  Also by Tim Anema 2010
 */
 
-this.parse = (function () {
+var parser = function () {
     var scope;
     var symbol_table = {};
 	var reservedWords = {}; 
     var token;
     var tokens;
     var token_nr;
-	
 	var scope_string = "";
 	
-	var error = function (message, t,errorNum) {
-		t.name = "SyntaxError";
-		t.message = message;
-		t.errorNum = errorNum;
-		t.error_code = 1;
-		throw t;
+	var error = function (message,t,errorNum) {
+        var errString = "===========Parser Interupted=============\n"
+        errString += "\n";
+        errString += "Syntax Error\n";
+        errString += message+"\n";
+        errString += "ERROR CODE: " + errorNum+"\n";
+        if(t['value']){
+            errString += "On " +  t['value'] + " " + t['arity']+"\n";
+            errString += "At Line: " + t['line'] + ", char : " + t['at']+"\n";
+        }
+        throw errString;
 	};
 	
 	var createObj = function (o){
@@ -816,7 +820,7 @@ this.parse = (function () {
 	
 	//---------------------- END OF DEFINITIONS ---------------------- 
     return function (TokenStream) {
-		scope_string = "";
+        scope_string = "";
         tokens = TokenStream;
         token_nr = 0;
         
@@ -828,4 +832,4 @@ this.parse = (function () {
 		
         return s;
     };
-})();
+}

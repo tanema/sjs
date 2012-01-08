@@ -2,19 +2,23 @@
 	interpreter.js
 	By Tim Anema 2010
 */
-this.interpret = (function () {
+this.interpreter = function (ioAdapter) {
 	//========================scoping definitions========================
 	var scope;
     var symbol_table = {};
 	var scope_arity = ['global','function','loop','if'];
-	var ioAdapter;
 	
 	var error = function (message, t,errorNum) {
-		t.name = "Interpret Error";
-		t.message = message;
-		t.errorNum = errorNum;
-		t.error_code = 1;
-		throw t;
+		var errString = "===========Interpeter Interupted=============\n"
+        errString += "\n";
+        errString += "Interpret Error\n";
+        errString += message+"\n";
+        errString += "ERROR CODE: " + errorNum+"\n";
+        if(t['value']){
+            errString += "On " +  t['value'] + " " + t['arity']+"\n";
+            errString += "At Line: " + t['line'] + ", char : " + t['at']+"\n";
+        }
+        throw errString;
 	};
 	
 	var createObj = function (o){
@@ -23,14 +27,14 @@ this.interpret = (function () {
 		return new F();
 	}
 	
-	var make = function (o, eval) {// Make a token object.
+	var make = function (o, val) {// Make a token object.
         return {
             value: 	o['value'],
 			name:	o['name'],
 			arity:	o['arity'],
 			first:	o['first'],
 			second:	o['second'],
-			eval:	eval || o['eval'],
+			eval:	val || o['eval'],
             from: 	o['from'],
             to: 	o['i'],
 			line: 	o['line'],
@@ -184,15 +188,17 @@ this.interpret = (function () {
 		var second = stat('second', currentItem);
 		if(currentItem['value'] === '='){	
 			first.eval = second;
+			return first.eval;
 		}
 		else if(typeof first.eval === typeof second){
 				 if(currentItem['value'] === '+=')	first.eval += second;
 			else if(currentItem['value'] === '/=')	first.eval /= second;
 			else if(currentItem['value'] === '*=')	first.eval *= second;
 			else if(currentItem['value'] === '-=')	first.eval -= second;
+			return first.eval;
 		}
-		return first.eval;
-		error("Type Mismatched",currentItem,3194);
+		else
+			error("Type Mismatched",currentItem,3194);
 	}
 	
 	function funcEval(currentItem){
@@ -289,7 +295,7 @@ this.interpret = (function () {
 		var returnVal = undefined;
 		if((from <= to && step > 0) || (from >= to && step < 0)){
 			start = from;
-			for(from;((start < to) ? (from <= to):(to <= from)); from+=step){
+			for(;((start < to) ? (from <= to):(to <= from)); from+=step){
 				if (loopval) loopval.eval = from;
 				returnVal = stat('second', loop);
 				if(value) value = stat('first', loop);
@@ -299,7 +305,7 @@ this.interpret = (function () {
 		}
 		else if((from > to && step > 0) || (from < to && step < 0)){
 			start = to;
-			for(to;((start < from) ? (to <= from):(from <= to)); to+=step){
+			for(;((start < from) ? (to <= from):(from <= to)); to+=step){
 				if (loopval) loopval.eval = to;
 				returnVal = stat('second', loop);
 				if(value) value = stat('first', loop);
@@ -438,31 +444,11 @@ this.interpret = (function () {
 		}
 	}
 	
-	function ErrorStatus(parseTree, error){
-		var status = error ? error:parseTree;
-		if(status.error_code === 1 || error){
-			ioAdapter.println("===========Interpeter Interupted=============");
-			ioAdapter.println(status['name']);
-			ioAdapter.println(status['message']);
-			ioAdapter.println("ERROR CODE: " + status['errorNum']);
-			if(status['value']){
-				ioAdapter.println("On " +  status['value'] + " " + status['arity'] );
-				ioAdapter.println("At Line: " + status['line'] + ", char : " + status['at']);
-			}
-			return true;
-		}
-		return false;
-	}
-	
-	return function (parseTree, ioa, error) {
-		ioAdapter = ioa;
-		if(ErrorStatus(parseTree, error))
-			return;
-		
+	return function (parseTree) {
 		ioAdapter.println("==============INIT Interpeter================\n");	
 		new_scope(scope_arity[0]);
-			stat('', {'': parseTree});
+		stat('', {'': parseTree});
 		scope.pop();
 		ioAdapter.println("\n==============END Interpeter=================");
 	};
-})();
+}
