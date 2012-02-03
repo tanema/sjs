@@ -9,19 +9,21 @@ var SJS = function(params){
 	var predefined = {
 		functions: {
 			print: function (output){
-				var console = document.getElementById('CONSOLE');
-				console.innerHTML += output;
-				console.scrollTop = console.scrollHeight;
+				var c = document.getElementById('CONSOLE');
+				c.innerHTML += output;
+				c.scrollTop = console.scrollHeight;
 			},
 			println: function (output){
-				var console = document.getElementById('CONSOLE');
-				console.innerHTML += output + '\n';
-				console.scrollTop = console.scrollHeight;
+				var c = document.getElementById('CONSOLE');
+				c.innerHTML += output + '\n';
+				c.scrollTop = console.scrollHeight;
 			},
-			inspect: function(obj){return JSON.stringify(obj, keys, tabspace);}
+			inspect: function(obj){
+				return JSON.stringify(obj, keys, tabspace);
+			}
 		},
 		constants: {
-			SJSAuthor: "TimAnema"
+			SJSAuthor: "Tim Anema"
 		}
 	}
 	//import user variables it is ok to overwrite if they want to

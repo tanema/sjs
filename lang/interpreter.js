@@ -93,7 +93,7 @@ this.interpreter = function (preDefinedFunctions) {
 			return scope.define(make(currentItem, currentItem),currentItem['name']);
 		else if(preDefinedFunctions[currentItem.value]){
 			var arr=[],i;
-			for(i=0;i<currentItem['first'].length;i++) arr.push(stat(i,currentItem['first']));
+			for(i=0;i<currentItem['first'].length;i++) arr.push(stat(i,currentItem['first']).eval);
 			return preDefinedFunctions['println'].apply(this||window,arr);
 		}
 		else
@@ -118,9 +118,21 @@ this.interpreter = function (preDefinedFunctions) {
 			case '{':
 				var arr=[],i;
 				for(i=0;i<currentItem['first'].length;i++)
-					arr[currentItem['first'][i]['key']] = stat(i,currentItem['first']);
+					arr[currentItem['first'][i]['key']] = make(currentItem['first'][i]['key'], stat(i,currentItem['first']));
 				return arr;
 			default:	error("undefined unary",currentItem,3120);
+		}
+	}
+
+	function dotStat(currentItem){
+		var first = stat('first', currentItem),
+			second = stat('second', currentItem);
+		console.log(currentItem)
+		if(first[second]){
+			return first[second];
+		}else{
+			first[second] = make(currentItem['second']);
+			return first[second];
 		}
 	}
 	
@@ -142,7 +154,7 @@ this.interpreter = function (preDefinedFunctions) {
 			case '*=':
 			case '/=':	return assignmentStat(currentItem);
 			case '(':	return funcEval(currentItem);
-			case '.':
+			case '.':   return dotStat(currentItem);
 			case '[':	return stat('first', currentItem)[stat('second', currentItem)];
 			case '>=':
 			case '=>':	return stat('first', currentItem) >= stat('second', currentItem);
@@ -187,7 +199,7 @@ this.interpreter = function (preDefinedFunctions) {
 	function assignmentStat(currentItem){
 		var first = stat('first', currentItem);//stat finds the variable
 		var second = stat('second', currentItem);
-		if(currentItem['value'] === '='){	
+		if(currentItem['value'] === '='){
 			first.eval = second;
 			return first.eval;
 		}
@@ -238,7 +250,8 @@ this.interpreter = function (preDefinedFunctions) {
 			case 'from':	
 			case 'while':	
 			case 'if':		
-			case 'switch':	
+			case 'switch':
+			case 'new':	
 			case 'var':		return eval(currentItem['value']+'Stat')(currentItem);
 			case 'return':
 			case 'break':	return currentItem
@@ -392,6 +405,16 @@ this.interpreter = function (preDefinedFunctions) {
 	
 	function varStat(currentItem){scope.define(make(currentItem['first'],stat('second', currentItem)));	}
 	
+	function newStat(currentItem){
+		try {
+			var i = new Object.create(stat('first', currentItem));
+			return i;
+		}catch(e){
+			console.log(e)
+			error(e.message,currentItem,3099);
+		} 
+	}
+
 	function thisStat(currentItem){
 		switch(currentItem['value']){
 			default:	error("undefined this stat",currentItem,3387);

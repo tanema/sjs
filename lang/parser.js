@@ -564,6 +564,15 @@ var parser = function (preDefined) {
         return e;
     });
 
+    prefix("new", function () {
+        var a = [],l;
+        this.arity = "statement";
+        l = createObj(this);
+        l.first = expression(0);
+        a.push(l);
+        return a.length === 0 ? null : a.length === 1 ? a[0] : a;
+    });
+
     prefix("function", function () {
         var a = [],n;
         if (token.id == "(name)") {
