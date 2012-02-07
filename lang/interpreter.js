@@ -93,7 +93,10 @@ this.interpreter = function (preDefinedFunctions) {
 			return scope.define(make(currentItem, currentItem),currentItem['name']);
 		else if(preDefinedFunctions[currentItem.value]){
 			var arr=[],i;
-			for(i=0;i<currentItem['first'].length;i++) arr.push(stat(i,currentItem['first']).eval);
+			for(i=0;i<currentItem['first'].length;i++){
+				console.log(currentItem['first'][i])
+				arr.push(stat(i,currentItem['first']));	
+			} 
 			return preDefinedFunctions['println'].apply(this||window,arr);
 		}
 		else
@@ -127,7 +130,6 @@ this.interpreter = function (preDefinedFunctions) {
 	function dotStat(currentItem){
 		var first = stat('first', currentItem),
 			second = stat('second', currentItem);
-		console.log(currentItem)
 		if(first[second]){
 			return first[second];
 		}else{

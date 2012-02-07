@@ -9,11 +9,13 @@ var SJS = function(params){
 	var predefined = {
 		functions: {
 			print: function (output){
+				console.log(output)
 				var c = document.getElementById('CONSOLE');
 				c.innerHTML += output;
 				c.scrollTop = console.scrollHeight;
 			},
 			println: function (output){
+				console.log(output)
 				var c = document.getElementById('CONSOLE');
 				c.innerHTML += output + '\n';
 				c.scrollTop = console.scrollHeight;
