@@ -94,8 +94,7 @@ this.interpreter = function (preDefinedFunctions) {
 		else if(preDefinedFunctions[currentItem.value]){
 			var arr=[],i;
 			for(i=0;i<currentItem['first'].length;i++){
-				console.log(currentItem['first'][i])
-				arr.push(stat(i,currentItem['first']));	
+				arr.push(stat(i,currentItem['first'],true));	
 			} 
 			return preDefinedFunctions['println'].apply(this||window,arr);
 		}
@@ -105,23 +104,23 @@ this.interpreter = function (preDefinedFunctions) {
 	
 	function unaryStat(currentItem){
 		switch(currentItem['value']){
-			case '-':	return -1 * stat('first', currentItem);
+			case '-':	return -1 * stat('first', currentItem, true);
 			case '!':	
-			case 'not': return !Boolean(stat('first', currentItem));
+			case 'not': return !Boolean(stat('first', currentItem,true));
 			case 'typeof': 
-				var v = stat('first', currentItem)
+				var v = stat('first', currentItem, true)
 				return typeof v;
 			case '~':	
-				var n = stat('first', currentItem);
+				var n = stat('first', currentItem,true);
 				return ~n;
 			case '[':
 				var arr=[],i;
-				for(i=0;i<currentItem['first'].length;i++) arr.push(stat(i,currentItem['first']));
+				for(i=0;i<currentItem['first'].length;i++) arr.push(stat(i,currentItem['first'],true));
 				return arr;
 			case '{':
 				var arr=[],i;
 				for(i=0;i<currentItem['first'].length;i++)
-					arr[currentItem['first'][i]['key']] = make(currentItem['first'][i]['key'], stat(i,currentItem['first']));
+					arr[currentItem['first'][i]['key']] = make(currentItem['first'][i]['key'], stat(i,currentItem['first'],true));
 				return arr;
 			default:	error("undefined unary",currentItem,3120);
 		}
@@ -412,7 +411,6 @@ this.interpreter = function (preDefinedFunctions) {
 			var i = new Object.create(stat('first', currentItem));
 			return i;
 		}catch(e){
-			console.log(e)
 			error(e.message,currentItem,3099);
 		} 
 	}
@@ -423,7 +421,7 @@ this.interpreter = function (preDefinedFunctions) {
 		}
 	}
 	
-	function stat(key, holder) {
+	function stat(key, holder, getValue) {
         var i,currentItem = holder[key];
         if (currentItem && typeof currentItem == 'object') {
 			if (Object.prototype.toString.apply(currentItem) === '[object Array]') {
@@ -441,8 +439,8 @@ this.interpreter = function (preDefinedFunctions) {
 					case 'statement': 
 					case 'this': 
 					case 'ternary': return eval(currentItem['arity']+'Stat')(currentItem);
-					case 'literal': return currentItem['value'];
-					case 'name': 	return (n = scope.find(currentItem)) ? n['eval'] : error("Undefined Item",currentItem,3410); 
+					case 'literal': return getValue ? currentItem['value'] : currentItem;
+					case 'name':  	return (n = scope.find(currentItem)) ? stat('eval', n, getValue) : error("Undefined Item",currentItem,3410);
 				}
 			}
 		}else
